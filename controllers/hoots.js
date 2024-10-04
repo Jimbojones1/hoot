@@ -2,17 +2,22 @@ const express = require("express");
 const router = express.Router();
 const HootModel = require("../models/hoot");
 
+// UNDER THE ASSUMPTION WE JUST WANT .THE AUTHORS NAME ON THE HOOT and THE COMMENT
+// see the models
+
+
 router.post("/", async function (req, res) {
   console.log(req.body, " <- this in contents of the form");
   console.log(req.user, " <- req.user from the jwt");
   req.body.author = req.user._id;
-
+  // new code
+  req.body.authorName = req.user.username
   try {
     //
     const hootDoc = await HootModel.create(req.body);
     // if we want to send back the author property with the whole object
     // instead just the userId
-    hootDoc._doc.author = req.user;
+    // hootDoc._doc.author = req.user;
     res.status(201).json(hootDoc);
   } catch (err) {
     console.log(err);
@@ -25,7 +30,7 @@ router.get("/", async function (req, res) {
     // .populate, is when you have referenced propetry
     // in this case author (check the model to see the refernce)
     // and it replaces the id with the object that the id references
-    const hootDocs = await HootModel.find({}).populate("author");
+    const hootDocs = await HootModel.find({})
 
     res.status(200).json(hootDocs);
   } catch (err) {
@@ -35,7 +40,7 @@ router.get("/", async function (req, res) {
 
 router.get("/:id", async function (req, res) {
   try {
-    const hootDoc = await HootModel.findById(req.params.id).populate("author");
+    const hootDoc = await HootModel.findById(req.params.id)
 
     res.status(200).json(hootDoc);
   } catch (err) {
@@ -117,15 +122,6 @@ router.post("/:hootId/comments", async function (req, res) {
 	hootDoc.comments.push(req.body)
 	// tell the deb we added cthe comment to the hoot array
 	await hootDoc.save()
-
-
-	// grab the new comment, which is the last comment in the array
-	// const newComment = hootDoc.comments[hootDoc.comments.length -1]
-	
-	// newComment._doc.author = req.user
-
-	// another way, because we are populating on a document
-	await hootDoc.populate('comments.author')
 
 	// up to us what we want to send back
 	res.status(201).json(hootDoc)
